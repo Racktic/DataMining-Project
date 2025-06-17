@@ -173,11 +173,6 @@ clf = lgb.LGBMClassifier(
         )
 clf.fit(train_data.drop(['label','customer_id'],axis=1),train_data['label'])
  
- 
-cols=train_data.columns.tolist()
-cols.remove('label')
-cols.remove('customer_id')
- 
 y_pred = clf.predict_proba(test_data.drop(['label','customer_id'],axis=1))[:,1] 
 result = pd.read_csv('./submission.csv')
 result['result'] = y_pred

@@ -33,15 +33,39 @@ label
 
 ## 预测模型
 
-训练集和验证集的划分基本都是用特征工程后得到的 data 和 label，按比例随机划分。
+训练集和验证集的划分基本都是用特征工程后得到的 data 和 label，按比例`8:2`随机划分。我们选取了三种算法对数据进行拟合，分别是LightBGM, XGBBoost和K-Means。其中前两种算法均为掉包实现，K-Means则是自己编码实现。
 
 ### LightGBM
 
-### XGBoost
+我们调用`lightgbm`包，对特征工程后的数据集进行拟合。
+LightGBM（Light Gradient Boosting Machine）是一种基于梯度提升决策树（GBDT）算法的机器学习框架。与传统的 GBDT 算法不同，LightGBM 通过优化树的构建方式提高了训练速度和内存效率。它使用了直方图算法来加速训练过程，将连续特征分桶为离散区间，减少了计算复杂度。同时，LightGBM 采用了基于叶子节点的最佳分裂算法，而不是传统的按层级生长树的方式，这样能够提高模型的精度和效率。
+我们的`LGBMClassifier`选取了如下参数：
+```
+clf = lgb.LGBMClassifier(
+            num_leaves=2**5-1, reg_alpha=0.25, reg_lambda=0.25, objective='binary',
+            max_depth=-1, learning_rate=0.005, min_child_samples=3, random_state=2021,
+            n_estimators=2500, subsample=1, colsample_bytree=1,
+        )
+```
+- 结果：在划分的测试集上达到了**0.71468**的AUC水平
 
+### XGBoost
+我们同时测试了调用`XGBoost`包的训练结果。
+XGBoost（eXtreme Gradient Boosting）是一种高效的梯度提升决策树算法，广泛应用于分类、回归和排序任务。它通过优化传统的梯度提升算法，采用正则化、列和行抽样、并行计算等技术，显著提高了计算速度和模型精度。XGBoost 支持处理缺失值，能够自动对数据中的缺失部分进行合理填充，并在大规模数据集上表现出色。
+我们选取的模型和训练参数如下：
+```python
+params = {
+    'objective': 'binary:logistic',  
+    'eval_metric': 'logloss',  
+    'max_depth': 6,  
+    'learning_rate': 0.1,  
+}
+num_round = 100  
+```
+- 结果：在划分的测试集上达到了**0.71539**的AUC水平
 ### K-means
 
-手动实现了 K-means 聚类预测方法。整体流程为：
+**手动**实现了 K-means 聚类预测方法。整体流程为：
 ```py
 - Initialize centroids
 - do until convergence or max_iters:
